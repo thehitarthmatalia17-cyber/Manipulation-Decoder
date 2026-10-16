@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Manipulation Decoder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff; --panel:#f7f9fc; --panel-2:#eef1f8; --border:#dde2f0;
+    --text:#0f172a; --muted:#5b6178;
+    --blue:#2563eb; --green:#16a34a; --red:#dc2626;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55;
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+
+  .wrap{max-width:760px; margin:0 auto; padding:48px 24px 64px;}
+  .hero{text-align:center; margin-bottom:40px;}
+  .hero h1{
+    font-family:'Space Grotesk',-apple-system,sans-serif;
+    font-size:clamp(2.4rem,6vw,3.4rem); margin:0 0 10px; letter-spacing:-.02em; font-weight:700; color:var(--text);
+  }
+  .tagline{color:var(--blue); font-weight:700; margin:0 0 16px; font-size:1.08rem;}
+  .hero-sub{color:var(--muted); max-width:480px; margin:0 auto; font-size:.97rem;}
+  .accent-bar{display:flex; justify-content:center; gap:6px; margin:20px 0 0;}
+  .accent-bar span{width:36px; height:6px; border-radius:3px;}
+  .accent-bar span:nth-child(1){background:var(--blue);}
+  .accent-bar span:nth-child(2){background:var(--green);}
+  .accent-bar span:nth-child(3){background:var(--red);}
+
+  .panel{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:28px; margin-bottom:28px; box-shadow:0 8px 28px rgba(15,23,42,.06);}
+  #analyzer label{display:block; font-size:.85rem; color:var(--muted); margin-bottom:8px; font-weight:600;}
+  textarea{
+    width:100%; min-height:130px; resize:vertical; font-family:inherit; font-size:.97rem;
+    background:#fff; border:1px solid var(--border); border-radius:10px; color:var(--text); padding:14px;
+  }
+  textarea:focus{outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,.15);}
+  .analyzer-row{display:flex; align-items:center; gap:16px; margin-top:16px; flex-wrap:wrap;}
+  button#analyseBtn{
+    background:var(--blue); color:#fff; border:none;
+    border-radius:10px; padding:14px 30px; font-size:1.02rem; font-weight:700; cursor:pointer; transition:background .15s,transform .15s,box-shadow .15s;
+    box-shadow:0 6px 20px rgba(37,99,235,.35);
+  }
+  button#analyseBtn:hover{background:#1d4fd1; transform:translateY(-2px); box-shadow:0 10px 28px rgba(37,99,235,.45);}
+  button#analyseBtn:disabled{opacity:.6; cursor:default; transform:none;}
+  .mode-note{color:var(--muted); font-size:.82rem;}
+
+  .results.hidden{display:none;}
+  .block-label{font-size:.82rem; color:var(--muted); margin:0 0 6px; font-weight:600;}
+  .risk-badge{display:inline-block; padding:8px 22px; border-radius:999px; border:2px solid; font-weight:700; font-size:1.05rem; margin-bottom:20px;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;}
+  .chip{border:1px solid; border-radius:999px; padding:4px 12px; font-size:.82rem; font-weight:600;}
+  .chip.muted{color:var(--muted); border-color:var(--border);}
+  .msg-box{
+    font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:.85rem; white-space:pre-wrap; line-height:1.6;
+    background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:20px;
+  }
+  #explanationText{margin:0 0 20px;}
+  #adviceList{margin:0; padding-left:20px;}
+  #adviceList li{margin-bottom:6px;}
+
+  .samples h2, .how h2{font-size:1.4rem; margin-bottom:16px; font-weight:700; color:var(--text);}
+  .sample-list{display:flex; flex-direction:column; gap:10px;}
+  .sample{
+    text-align:left; width:100%; background:var(--panel); border:1px solid var(--border); border-left:4px solid var(--blue);
+    border-radius:8px; padding:14px 16px; color:var(--text); font-size:.88rem; cursor:pointer; transition:background .15s,transform .15s,box-shadow .15s;
+  }
+  .sample:hover{background:var(--panel-2); transform:translateY(-2px); box-shadow:0 8px 20px rgba(15,23,42,.1);}
+  .sample .tag{display:block; color:var(--muted); font-size:.75rem; margin-bottom:4px; font-weight:600;}
+
+  .steps{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:16px;}
+  .steps li{display:flex; gap:14px; align-items:flex-start;}
+  .steps .num{
+    flex:0 0 28px; height:28px; border-radius:50%; background:var(--blue); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:.85rem; font-weight:700;
+  }
+  .steps strong{display:block; margin-bottom:2px;}
+  .steps p{margin:0; color:var(--muted); font-size:.88rem;}
+
+  footer{max-width:760px; margin:0 auto; padding:0 24px 48px;}
+  .disclaimer{color:var(--muted); font-size:.82rem; border-top:1px solid var(--border); padding-top:20px;}
+
+  @media (max-width:480px){
+    .wrap{padding:32px 16px 48px;}
+    .panel{padding:20px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <h1>Manipulation Decoder</h1>
+    <p class="tagline">Think Before You Trust</p>
+    <p class="hero-sub">Paste a message you're unsure about, and we'll check it for common tactics used in scams and phishing attempts.</p>
+    <div class="accent-bar"><span></span><span></span><span></span></div>
+  </header>
+
+  <main>
+    <section id="analyzer" class="panel">
+      <label for="msgInput">Message to check</label>
+      <textarea id="msgInput" placeholder="Paste the suspicious message here..."></textarea>
+      <div class="analyzer-row">
+        <button id="analyseBtn">Analyse Message</button>
+        <span class="mode-note">Demo mode — pattern-matching runs in your browser only, no AI API or data sent anywhere.</span>
+      </div>
+    </section>
+
+    <section id="results" class="panel results hidden">
+      <p class="block-label">Risk level</p>
+      <span id="riskBadge" class="risk-badge">—</span>
+
+      <p class="block-label">Techniques detected</p>
+      <div id="techChips" class="chips"></div>
+
+      <p class="block-label">Message with suspicious parts marked</p>
+      <div id="highlightedMsg" class="msg-box"></div>
+
+      <p class="block-label">Why this matters</p>
+      <p id="explanationText"></p>
+
+      <p class="block-label">What to do next</p>
+      <ul id="adviceList"></ul>
+    </section>
+
+    <section class="samples">
+      <h2>Try a sample message</h2>
+      <div class="sample-list">
+        <button class="sample" style="border-left-color:var(--red)" data-msg="URGENT: Your bank account will be blocked in 2 hours due to suspicious activity. Click this link immediately to verify your identity and avoid permanent suspension.">
+          <span class="tag">Fake bank alert</span>"URGENT: Your bank account will be blocked in 2 hours..."
+        </button>
+        <button class="sample" style="border-left-color:var(--red)" data-msg="This is customer care from your bank. We've noticed unusual activity on your account. Please share the OTP sent to your phone immediately to verify your identity and avoid your account being blocked.">
+          <span class="tag">OTP verification scam</span>"This is customer care from your bank... share the OTP..."
+        </button>
+        <button class="sample" style="border-left-color:var(--blue)" data-msg="Congratulations! You have won a cash reward of $10,000 in our lottery. Claim your reward today by clicking the link below.">
+          <span class="tag">Lottery scam</span>"Congratulations! You have won a cash reward of $10,000..."
+        </button>
+        <button class="sample" style="border-left-color:var(--blue)" data-msg="You have a new message from someone you may know — click to see who sent it!">
+          <span class="tag">Curiosity clickbait</span>"You have a new message from someone you may know..."
+        </button>
+        <button class="sample" style="border-left-color:var(--green)" data-msg="Hey! Just checking if we're still on for lunch tomorrow at 1 PM. Let me know if that still works for you.">
+          <span class="tag">Normal message</span>"Hey! Just checking if we're still on for lunch tomorrow..."
+        </button>
+      </div>
+    </section>
+
+    <section class="how">
+      <h2>How it works</h2>
+      <ol class="steps">
+        <li><span class="num">1</span><div><strong>Paste a message</strong><p>Copy a text, email, or DM you're unsure about into the box above.</p></div></li>
+        <li><span class="num">2</span><div><strong>Click Analyse</strong><p>Our rules scan the wording for known manipulation patterns.</p></div></li>
+        <li><span class="num">3</span><div><strong>Check the techniques</strong><p>See which tactics — fear, urgency, greed, and others — were found.</p></div></li>
+        <li><span class="num">4</span><div><strong>Read the advice</strong><p>Follow the safety tips before you click, reply, or share anything.</p></div></li>
+      </ol>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <p class="disclaimer">⚠ This is a simple rule-based demo built for a student hackathon — it is not a security product. It can miss real scams and may flag harmless messages too. Never rely on it alone: when in doubt, contact the organisation directly using a number or website you already trust, not one from the message.</p>
+</footer>
+
+<script>
+  // ---- 1. The rules: one list of giveaway phrases per manipulation technique ----
+  const TECHNIQUES = {
+    fear:      { label: 'Fear',            color: 'var(--red)',
+      phrases: ['blocked','suspended','arrested','legal action','penalty','account will be closed','hacked','compromised','unauthorized access','seized','permanently deleted'] },
+    urgency:   { label: 'Urgency',         color: '#ef4444',
+      phrases: ['immediately','right now','urgent','act now','act fast','within 2 hours','within 24 hours','last chance','expires today','hurry','limited time',"before it's too late",'claim now'] },
+    greed:     { label: 'Greed',           color: 'var(--green)',
+      phrases: ['you have won','winner','prize','congratulations','claim your','lottery','cash reward','guaranteed','jackpot','free gift'] },
+    authority: { label: 'Fake authority',  color: 'var(--blue)',
+      phrases: ['your bank','the government','police department','official notice','this department','verify your account','automated message','tax office','support team','security team','customer care','share the otp','share your otp','one-time password','verification code'] },
+    curiosity: { label: 'Curiosity',       color: '#0ea5e9',
+      phrases: ["you won't believe",'click to see','viewed your profile','secret','shocking','new message from','someone is asking about you'] },
+    social:    { label: 'Social pressure', color: '#22c55e',
+      phrases: ['everyone is','your friends','already joined',"don't be left out",'limited spots','others have','share with','join now'] }
+  };
+
+  // ---- 2. Scan the message text and return which techniques matched ----
+  function analyse(text) {
+    const lower = text.toLowerCase();
+    const found = [];
+    for (const key in TECHNIQUES) {
+      const t = TECHNIQUES[key];
+      const hit = t.phrases.find(p => lower.includes(p));
+      if (hit) found.push({ key, label: t.label, color: t.color, phrase: hit });
+    }
+    return found;
+  }
+
+  // ---- 3. Turn the number of matched techniques into a risk level ----
+  function riskLevel(count) {
+    if (count === 0) return { label: 'Low risk', color: 'var(--green)' };
+    if (count === 1) return { label: 'Medium risk', color: 'var(--blue)' };
+    return { label: 'High risk', color: 'var(--red)' };
+  }
+
+  // ---- 4. Safely escape text before putting it back into the page ----
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ---- 5. Wrap each matched phrase in a coloured <mark> ----
+  function highlight(text, found) {
+    let safe = escapeHtml(text);
+    found.forEach(f => {
+      const escaped = f.phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp('(' + escaped + ')', 'i');
+      safe = safe.replace(re, `<mark style="background:${f.color}30;color:${f.color};border-bottom:2px solid ${f.color};font-weight:700">$1</mark>`);
+    });
+    return safe;
+  }
+
+  function explain(found) {
+    if (found.length === 0) {
+      return "We didn't spot any of the common manipulation patterns we check for. That's a good sign, but it doesn't guarantee the message is genuine — always double-check unexpected requests.";
+    }
+    const labels = found.map(f => f.label.toLowerCase()).join(', ');
+    return `This message uses ${labels}. Scammers combine tactics like these to make you react emotionally instead of thinking carefully.`;
+  }
+
+  function advice(found) {
+    const tips = [
+      "Don't click links or download attachments from messages like this.",
+      'Contact the organisation yourself using a number or website you already trust — never the one in the message.',
+      'Take your time. Real emergencies rarely depend on you acting in the next few minutes.'
+    ];
+    if (found.some(f => f.key === 'authority')) tips.push('Never share an OTP, PIN, or verification code with anyone — no genuine bank or company will ever ask for it by call, SMS, or message.');
+    if (found.some(f => f.key === 'greed')) tips.push("If it sounds too good to be true — a prize you didn't enter for — it almost always is.");
+    return tips;
+  }
+
+  // ---- 6. Render everything into the results panel ----
+  function showResults(text) {
+    const found = analyse(text);
+    const risk = riskLevel(found.length);
+    const results = document.getElementById('results');
+    results.classList.remove('hidden');
+
+    const badge = document.getElementById('riskBadge');
+    badge.textContent = risk.label;
+    badge.style.color = risk.color;
+    badge.style.borderColor = risk.color;
+    badge.style.background = risk.color + '15';
+
+    document.getElementById('techChips').innerHTML = found.length
+      ? found.map(f => `<span class="chip" style="color:${f.color};border-color:${f.color};background:${f.color}15">${f.label}</span>`).join('')
+      : '<span class="chip muted">None detected</span>';
+
+    document.getElementById('highlightedMsg').innerHTML = highlight(text, found);
+    document.getElementById('explanationText').textContent = explain(found);
+    document.getElementById('adviceList').innerHTML = advice(found).map(a => `<li>${escapeHtml(a)}</li>`).join('');
+
+    results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // A tiny "scanning" delay makes the demo feel like it's really working
+  function runAnalysis(text) {
+    const btn = document.getElementById('analyseBtn');
+    btn.disabled = true;
+    btn.textContent = 'Analysing...';
+    setTimeout(() => {
+      showResults(text);
+      btn.disabled = false;
+      btn.textContent = 'Analyse Message';
+    }, 450);
+  }
+
+  document.getElementById('analyseBtn').addEventListener('click', () => {
+    const text = document.getElementById('msgInput').value.trim();
+    if (!text) { document.getElementById('msgInput').focus(); return; }
+    runAnalysis(text);
+  });
+
+  document.querySelectorAll('.sample').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const msg = btn.getAttribute('data-msg');
+      document.getElementById('msgInput').value = msg;
+      runAnalysis(msg);
+    });
+  });
+</script>
+</body>
+</html>
